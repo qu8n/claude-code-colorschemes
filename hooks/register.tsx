@@ -229,12 +229,17 @@ export const register: Register = on => {
   })
 
   // Claude's replies: padded box in the theme's reply colour, markdown in theme colours
-  on('ui.render', { component: 'AssistantMessage' }, ($, e) => {
+  // Hooks beneath still run, with the text emptied so the reply is not drawn twice; what they add goes under the box.
+  on('ui.render', { component: 'AssistantMessage' }, async ($, e, next) => {
     const t = $.ui.resolve(e)
     const { Box } = t
+    const below = await next({ ...e, props: { ...e.props, text: '' } })
     return (
-      <Box backgroundColor={theme.reply.bg} paddingX={2} paddingY={1} marginTop={1}>
-        {renderMarkdown(e.props.text, t)}
+      <Box flexDirection="column">
+        <Box backgroundColor={theme.reply.bg} paddingX={2} paddingY={1} marginTop={1}>
+          {renderMarkdown(e.props.text, t)}
+        </Box>
+        {below}
       </Box>
     )
   })
